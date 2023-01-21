@@ -1,9 +1,9 @@
 package handler
 
 import (
+	"go-fiber/config"
 	"go-fiber/initializers"
 	"go-fiber/models"
-	"os"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -82,7 +82,7 @@ func Login(c *fiber.Ctx) error {
 	})
 
 	// Sign and get the complete encoded token as a string using the secret
-	tokenString, err := token.SignedString([]byte(os.Getenv("SECRET")))
+	tokenString, err := token.SignedString([]byte(config.Config("SECRET")))
 
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
