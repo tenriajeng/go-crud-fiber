@@ -11,6 +11,8 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
+var AuthenticatedUser models.User
+
 // Protected protect routes
 func Protected(c *fiber.Ctx) error {
 	tokenString := c.Cookies("Authorization")
@@ -44,7 +46,7 @@ func Protected(c *fiber.Ctx) error {
 
 		var user models.User
 		initializers.DB.First(&user, claims["sub"])
-
+		AuthenticatedUser = user
 		if user.ID == 0 {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"message": "Unauthorized",
@@ -52,9 +54,9 @@ func Protected(c *fiber.Ctx) error {
 		}
 
 		return c.Next()
-	} else {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"message": "Unauthorized",
-		})
 	}
+
+	return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+		"message": "Unauthorized",
+	})
 }

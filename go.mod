@@ -12,6 +12,12 @@ require (
 require golang.org/x/crypto v0.5.0
 
 require (
+	github.com/iancoleman/strcase v0.2.0 // indirect
+	github.com/morkid/gocache v1.0.0 // indirect
+	github.com/morkid/paginate v1.1.6 // indirect
+)
+
+require (
 	github.com/andybalholm/brotli v1.0.4 // indirect
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/golang-jwt/jwt/v4 v4.4.3

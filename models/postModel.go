@@ -13,4 +13,6 @@ type Post struct {
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at"`
 	Title     string         `json:"title"`
 	Body      string         `json:"body"`
+	UserID    uint           `gorm:"column:user_id" json:"user_id"`
+	User      User           `json:"users"`
 }

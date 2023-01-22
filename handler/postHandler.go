@@ -3,6 +3,7 @@ package handler
 import (
 	"errors"
 	"go-fiber/initializers"
+	"go-fiber/middleware"
 	"go-fiber/models"
 
 	"github.com/gofiber/fiber/v2"
@@ -10,12 +11,12 @@ import (
 )
 
 func GetAllPost(c *fiber.Ctx) error {
-
 	var posts []models.Post
-	initializers.DB.Find(&posts)
+	model := initializers.DB.Preload("User").Model(&posts)
 
-	return c.JSON(posts)
-
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"data": initializers.PG.With(model).Request(c.Request()).Response(&[]models.Post{}),
+	})
 }
 
 func CreatePost(c *fiber.Ctx) error {
@@ -30,12 +31,13 @@ func CreatePost(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(err)
 	}
 
-	post := models.Post{Title: body.Title, Body: body.Body}
+	authenticatedUser := middleware.AuthenticatedUser
 
+	post := models.Post{Title: body.Title, Body: body.Body, UserID: authenticatedUser.ID}
 	result := initializers.DB.Create(&post)
 
 	if result.Error != nil {
-		return c.JSON(result.Error)
+		return c.Status(fiber.StatusInternalServerError).JSON(result.Error)
 	}
 
 	return c.JSON(fiber.Map{
@@ -47,15 +49,16 @@ func GetSinglePost(c *fiber.Ctx) error {
 	id := c.Params("id")
 
 	var post models.Post
-	result := initializers.DB.First(&post, id)
+
+	result := initializers.DB.Preload("User").First(&post, id)
 
 	if result.Error != nil {
-		return c.JSON(fiber.Map{
+		return c.Status(fiber.StatusOK).JSON(fiber.Map{
 			"data": errors.Is(result.Error, gorm.ErrRecordNotFound),
 		})
 	}
 
-	return c.JSON(fiber.Map{
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"data": post,
 	})
 }
@@ -77,7 +80,9 @@ func UpdatePost(c *fiber.Ctx) error {
 	result := initializers.DB.First(&post, id)
 
 	if result.Error != nil {
-		return c.JSON(result.Error)
+		return c.Status(fiber.StatusOK).JSON(fiber.Map{
+			"data": errors.Is(result.Error, gorm.ErrRecordNotFound),
+		})
 	}
 
 	result = initializers.DB.Model(&post).Updates(models.Post{
@@ -86,10 +91,12 @@ func UpdatePost(c *fiber.Ctx) error {
 	})
 
 	if result.Error != nil {
-		return c.JSON(result.Error)
+		return c.Status(fiber.StatusOK).JSON(fiber.Map{
+			"data": "failed update data",
+		})
 	}
 
-	return c.JSON(fiber.Map{
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"data": post,
 	})
 }
@@ -99,10 +106,12 @@ func DeletePost(c *fiber.Ctx) error {
 	result := initializers.DB.Delete(&models.Post{}, id)
 
 	if result.Error != nil {
-		return c.JSON(result.Error)
+		return c.Status(fiber.StatusOK).JSON(fiber.Map{
+			"data": errors.Is(result.Error, gorm.ErrRecordNotFound),
+		})
 	}
 
-	return c.JSON(fiber.Map{
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"data": "post completely deleted",
 	})
 }

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"go-fiber/config"
+	"go-fiber/helper"
 	"go-fiber/initializers"
 	"go-fiber/models"
 	"time"
@@ -32,7 +33,7 @@ func SingUp(c *fiber.Ctx) error {
 		})
 	}
 
-	user := models.User{Email: body.Email, Password: string(hash)}
+	user := models.User{Email: body.Email, Password: string(hash), Username: helper.RandomString(10)}
 
 	result := initializers.DB.Create(&user)
 
