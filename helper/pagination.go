@@ -1,4 +1,4 @@
-package initializers
+package helper
 
 import "github.com/morkid/paginate"
 

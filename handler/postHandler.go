@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"go-fiber/helper"
 	"go-fiber/initializers"
 	"go-fiber/middleware"
 	"go-fiber/models"
@@ -12,11 +13,11 @@ import (
 
 func GetAllPost(c *fiber.Ctx) error {
 	var posts []models.Post
-	model := initializers.DB.Preload("User").Model(&posts)
+	model := initializers.DB.Debug().Preload("User").Model(&posts)
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data": initializers.PG.With(model).Request(c.Request()).Response(&[]models.Post{}),
-	})
+	result := helper.PG.With(model).Request(c.Request()).Response(&[]models.Post{})
+
+	return helper.JsonResponse(c, fiber.StatusOK, result)
 }
 
 func CreatePost(c *fiber.Ctx) error {
@@ -28,21 +29,18 @@ func CreatePost(c *fiber.Ctx) error {
 	err := c.BodyParser(&body)
 
 	if err != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(err)
+		return helper.JsonResponse(c, fiber.StatusUnprocessableEntity, err)
 	}
 
 	authenticatedUser := middleware.AuthenticatedUser
-
 	post := models.Post{Title: body.Title, Body: body.Body, UserID: authenticatedUser.ID}
-	result := initializers.DB.Create(&post)
+	result := initializers.DB.Debug().Create(&post)
 
 	if result.Error != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(result.Error)
+		return helper.JsonResponse(c, fiber.StatusInternalServerError, result.Error)
 	}
 
-	return c.JSON(fiber.Map{
-		"data": post,
-	})
+	return helper.JsonResponse(c, fiber.StatusOK, "post success fully created")
 }
 
 func GetSinglePost(c *fiber.Ctx) error {
@@ -50,17 +48,13 @@ func GetSinglePost(c *fiber.Ctx) error {
 
 	var post models.Post
 
-	result := initializers.DB.Preload("User").First(&post, id)
+	result := initializers.DB.Debug().Preload("User").First(&post, id)
 
 	if result.Error != nil {
-		return c.Status(fiber.StatusOK).JSON(fiber.Map{
-			"data": errors.Is(result.Error, gorm.ErrRecordNotFound),
-		})
+		return helper.JsonResponse(c, fiber.StatusOK, errors.Is(result.Error, gorm.ErrRecordNotFound))
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data": post,
-	})
+	return helper.JsonResponse(c, fiber.StatusOK, post)
 }
 
 func UpdatePost(c *fiber.Ctx) error {
@@ -73,16 +67,14 @@ func UpdatePost(c *fiber.Ctx) error {
 
 	err := c.BodyParser(&body)
 	if err != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(err)
+		return helper.JsonResponse(c, fiber.StatusUnprocessableEntity, err)
 	}
 
 	var post models.Post
 	result := initializers.DB.First(&post, id)
 
 	if result.Error != nil {
-		return c.Status(fiber.StatusOK).JSON(fiber.Map{
-			"data": errors.Is(result.Error, gorm.ErrRecordNotFound),
-		})
+		return helper.JsonResponse(c, fiber.StatusOK, errors.Is(result.Error, gorm.ErrRecordNotFound))
 	}
 
 	result = initializers.DB.Model(&post).Updates(models.Post{
@@ -91,14 +83,10 @@ func UpdatePost(c *fiber.Ctx) error {
 	})
 
 	if result.Error != nil {
-		return c.Status(fiber.StatusOK).JSON(fiber.Map{
-			"data": "failed update data",
-		})
+		return helper.JsonResponse(c, fiber.StatusOK, "failed update data")
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data": post,
-	})
+	return helper.JsonResponse(c, fiber.StatusOK, "post success fully updated")
 }
 
 func DeletePost(c *fiber.Ctx) error {
@@ -106,12 +94,8 @@ func DeletePost(c *fiber.Ctx) error {
 	result := initializers.DB.Delete(&models.Post{}, id)
 
 	if result.Error != nil {
-		return c.Status(fiber.StatusOK).JSON(fiber.Map{
-			"data": errors.Is(result.Error, gorm.ErrRecordNotFound),
-		})
+		return helper.JsonResponse(c, fiber.StatusOK, errors.Is(result.Error, gorm.ErrRecordNotFound))
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data": "post completely deleted",
-	})
+	return helper.JsonResponse(c, fiber.StatusOK, "post success fully updated")
 }

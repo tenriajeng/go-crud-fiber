@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"go-fiber/helper"
 	"go-fiber/initializers"
 	"go-fiber/models"
 
@@ -9,9 +10,10 @@ import (
 
 func GetAllUser(c *fiber.Ctx) error {
 	var users []models.User
-	model := initializers.DB.Debug().Preload("Post").Model(&users)
+	model := initializers.DB.Debug().Model(&users)
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data": initializers.PG.With(model).Request(c.Request()).Response(&[]models.User{}),
-	})
+	result := helper.PG.With(model).Request(c.Request()).Response(&[]models.User{})
+
+	return helper.JsonResponse(c, fiber.StatusOK, result)
+
 }
