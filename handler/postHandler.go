@@ -6,6 +6,7 @@ import (
 	"go-fiber/initializers"
 	"go-fiber/middleware"
 	"go-fiber/models"
+	"go-fiber/validation"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -21,20 +22,22 @@ func GetAllPost(c *fiber.Ctx) error {
 }
 
 func CreatePost(c *fiber.Ctx) error {
-	var body struct {
-		Title string
-		Body  string
-	}
+	newPost := new(models.Post)
 
-	err := c.BodyParser(&body)
+	err := c.BodyParser(newPost)
 
 	if err != nil {
-		return helper.JsonResponse(c, fiber.StatusUnprocessableEntity, err)
+		return helper.JsonResponse(c, fiber.StatusInternalServerError, err.Error())
+	}
+
+	errors := validation.ValidateStruct(*newPost)
+	if errors != nil {
+		return helper.JsonResponse(c, fiber.StatusBadRequest, errors)
 	}
 
 	authenticatedUser := middleware.AuthenticatedUser
 
-	post := models.Post{Title: body.Title, Body: body.Body, UserID: authenticatedUser.ID}
+	post := models.Post{Title: newPost.Title, Body: newPost.Body, UserID: authenticatedUser.ID}
 	result := initializers.DB.Debug().Create(&post)
 
 	if result.Error != nil {
@@ -61,30 +64,33 @@ func GetSinglePost(c *fiber.Ctx) error {
 func UpdatePost(c *fiber.Ctx) error {
 	id := c.Params("id")
 
-	var body struct {
-		Title string
-		Body  string
+	newPost := new(models.Post)
+
+	err := c.BodyParser(newPost)
+
+	if err != nil {
+		return helper.JsonResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 
-	err := c.BodyParser(&body)
-	if err != nil {
-		return helper.JsonResponse(c, fiber.StatusUnprocessableEntity, err)
+	errors := validation.ValidateStruct(*newPost)
+	if errors != nil {
+		return helper.JsonResponse(c, fiber.StatusBadRequest, errors)
 	}
 
 	var post models.Post
-	result := initializers.DB.First(&post, id)
+	result := initializers.DB.Debug().First(&post, id)
 
 	if result.Error != nil {
-		return helper.JsonResponse(c, fiber.StatusInternalServerError, errors.Is(result.Error, gorm.ErrRecordNotFound))
+		return helper.JsonResponse(c, fiber.StatusInternalServerError, result.Error.Error())
 	}
 
-	result = initializers.DB.Model(&post).Updates(models.Post{
-		Title: body.Title,
-		Body:  body.Body,
+	result = initializers.DB.Debug().Model(&post).Updates(models.Post{
+		Title: newPost.Title,
+		Body:  newPost.Body,
 	})
 
 	if result.Error != nil {
-		return helper.JsonResponse(c, fiber.StatusInternalServerError, "failed update data")
+		return helper.JsonResponse(c, fiber.StatusInternalServerError, result.Error.Error())
 	}
 
 	return helper.JsonResponse(c, fiber.StatusOK, "post success fully updated")
@@ -92,11 +98,11 @@ func UpdatePost(c *fiber.Ctx) error {
 
 func DeletePost(c *fiber.Ctx) error {
 	id := c.Params("id")
-	result := initializers.DB.Delete(&models.Post{}, id)
+	result := initializers.DB.Debug().Delete(&models.Post{}, id)
 
 	if result.Error != nil {
-		return helper.JsonResponse(c, fiber.StatusInternalServerError, errors.Is(result.Error, gorm.ErrRecordNotFound))
+		return helper.JsonResponse(c, fiber.StatusInternalServerError, result.Error.Error())
 	}
 
-	return helper.JsonResponse(c, fiber.StatusOK, "post success fully updated")
+	return helper.JsonResponse(c, fiber.StatusOK, "post success fully deleted")
 }

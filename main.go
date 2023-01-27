@@ -21,10 +21,10 @@ func main() {
 	app := fiber.New(fiber.Config{
 		AppName: config.Config("APP_NAME"),
 		// Prefork:           true,
-		EnablePrintRoutes: true,
-		IdleTimeout:       5 * time.Second,
-		JSONEncoder:       json.Marshal,
-		JSONDecoder:       json.Unmarshal,
+		// EnablePrintRoutes: true,
+		IdleTimeout: 5 * time.Second,
+		JSONEncoder: json.Marshal,
+		JSONDecoder: json.Unmarshal,
 	})
 
 	middleware.Logger(app)
