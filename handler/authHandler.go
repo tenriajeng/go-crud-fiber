@@ -5,6 +5,7 @@ import (
 	"go-fiber/helper"
 	"go-fiber/initializers"
 	"go-fiber/models"
+	"go-fiber/validation"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -13,24 +14,29 @@ import (
 )
 
 func SingUp(c *fiber.Ctx) error {
-	var body struct {
-		Email    string
-		Password string
+
+	newUser := new(models.User)
+
+	err := c.BodyParser(newUser)
+
+	if err != nil {
+		return helper.JsonResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 
-	if c.BodyParser(&body) != nil {
-		return helper.JsonResponse(c, fiber.StatusInternalServerError, "Failed read body")
+	errors := validation.ValidateStruct(*newUser)
+	if errors != nil {
+		return helper.JsonResponse(c, fiber.StatusBadRequest, errors)
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), 10)
+	hash, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), 10)
 
 	if err != nil {
 		return helper.JsonResponse(c, fiber.StatusInternalServerError, "Failed hash password")
 	}
 
-	user := models.User{Email: body.Email, Password: string(hash), Username: helper.RandomString(10)}
+	user := models.User{Email: newUser.Email, Password: string(hash), Username: helper.RandomString(10)}
 
-	result := initializers.DB.Create(&user)
+	result := initializers.DB.Debug().Create(&user)
 
 	if result.Error != nil {
 		return helper.JsonResponse(c, fiber.StatusOK, "User already exists")
@@ -40,23 +46,27 @@ func SingUp(c *fiber.Ctx) error {
 }
 
 func Login(c *fiber.Ctx) error {
-	var body struct {
-		Email    string
-		Password string
+	newUser := new(models.User)
+
+	err := c.BodyParser(newUser)
+
+	if err != nil {
+		return helper.JsonResponse(c, fiber.StatusInternalServerError, err.Error())
 	}
 
-	if c.BodyParser(&body) != nil {
-		return helper.JsonResponse(c, fiber.StatusBadRequest, "Failed read body")
+	errors := validation.ValidateStruct(*newUser)
+	if errors != nil {
+		return helper.JsonResponse(c, fiber.StatusBadRequest, errors)
 	}
 
 	var user models.User
-	initializers.DB.First(&user, "email = ?", body.Email)
+	initializers.DB.Debug().First(&user, "email = ?", newUser.Email)
 
 	if user.ID == 0 {
 		return helper.JsonResponse(c, fiber.StatusBadRequest, "invalid email or password")
 	}
 
-	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password))
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(newUser.Password))
 
 	if err != nil {
 		return helper.JsonResponse(c, fiber.StatusBadRequest, "invalid email or password")
