@@ -19,18 +19,13 @@ func SingUp(c *fiber.Ctx) error {
 	}
 
 	if c.BodyParser(&body) != nil {
-		return c.JSON(fiber.Map{
-			"error": "Failed read body",
-		})
+		return helper.JsonResponse(c, fiber.StatusInternalServerError, "Failed read body")
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), 10)
 
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error":   "Failed hash password",
-			"message": hash,
-		})
+		return helper.JsonResponse(c, fiber.StatusInternalServerError, "Failed hash password")
 	}
 
 	user := models.User{Email: body.Email, Password: string(hash), Username: helper.RandomString(10)}
@@ -38,14 +33,10 @@ func SingUp(c *fiber.Ctx) error {
 	result := initializers.DB.Create(&user)
 
 	if result.Error != nil {
-		return c.Status(fiber.StatusOK).JSON(fiber.Map{
-			"error": "User already exists",
-		})
+		return helper.JsonResponse(c, fiber.StatusOK, "User already exists")
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data": user,
-	})
+	return helper.JsonResponse(c, fiber.StatusOK, user)
 }
 
 func Login(c *fiber.Ctx) error {
@@ -55,26 +46,20 @@ func Login(c *fiber.Ctx) error {
 	}
 
 	if c.BodyParser(&body) != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Failed read body",
-		})
+		return helper.JsonResponse(c, fiber.StatusBadRequest, "Failed read body")
 	}
 
 	var user models.User
 	initializers.DB.First(&user, "email = ?", body.Email)
 
 	if user.ID == 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "invalid email or password",
-		})
+		return helper.JsonResponse(c, fiber.StatusBadRequest, "invalid email or password")
 	}
 
 	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password))
 
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "invalid email or password",
-		})
+		return helper.JsonResponse(c, fiber.StatusBadRequest, "invalid email or password")
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
@@ -86,10 +71,7 @@ func Login(c *fiber.Ctx) error {
 	tokenString, err := token.SignedString([]byte(config.Config("SECRET")))
 
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Failed to create token",
-		})
-
+		return helper.JsonResponse(c, fiber.StatusBadRequest, "Failed to create token")
 	}
 
 	cookie := new(fiber.Cookie)
@@ -99,15 +81,11 @@ func Login(c *fiber.Ctx) error {
 
 	c.Cookie(cookie)
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data": user,
-	})
+	return helper.JsonResponse(c, fiber.StatusOK, user)
 }
 
 func Validate(c *fiber.Ctx) error {
 	user := c.Cookies("Authorization")
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": user,
-	})
+	return helper.JsonResponse(c, fiber.StatusOK, user)
 }

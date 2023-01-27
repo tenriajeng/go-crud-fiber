@@ -6,14 +6,17 @@ import (
 )
 
 func Logger(app *fiber.App) {
-	app.Use(logger.New(logger.Config{
-		Format:     "[${ip}]:${port} ${status} - ${method} ${path}\n",
-		TimeFormat: "02-Jan-2006",
+
+	config := logger.Config{
+		Format:     "TIME:${time} PID:${pid} PORT:${port} STATUS:${status} - METHOD:${method} PATH:${path} LATENCY:${latency} URL:${host}${url}\n",
 		TimeZone:   "Asia/Makassar",
+		TimeFormat: "02-Jan-2006 15:04:05",
 		// Done: func(c *fiber.Ctx, logString []byte) {
 		// 	if c.Response().StatusCode() != fiber.StatusOK {
-		// 		reporter.SendToSlack(logString)
+		// 		utils.SendToDiscord(logString)
 		// 	}
 		// },
-	}))
+	}
+
+	app.Use(logger.New(config))
 }

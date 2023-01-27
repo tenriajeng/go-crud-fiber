@@ -33,6 +33,7 @@ func CreatePost(c *fiber.Ctx) error {
 	}
 
 	authenticatedUser := middleware.AuthenticatedUser
+
 	post := models.Post{Title: body.Title, Body: body.Body, UserID: authenticatedUser.ID}
 	result := initializers.DB.Debug().Create(&post)
 
@@ -51,7 +52,7 @@ func GetSinglePost(c *fiber.Ctx) error {
 	result := initializers.DB.Debug().Preload("User").First(&post, id)
 
 	if result.Error != nil {
-		return helper.JsonResponse(c, fiber.StatusOK, errors.Is(result.Error, gorm.ErrRecordNotFound))
+		return helper.JsonResponse(c, fiber.StatusInternalServerError, errors.Is(result.Error, gorm.ErrRecordNotFound))
 	}
 
 	return helper.JsonResponse(c, fiber.StatusOK, post)
@@ -74,7 +75,7 @@ func UpdatePost(c *fiber.Ctx) error {
 	result := initializers.DB.First(&post, id)
 
 	if result.Error != nil {
-		return helper.JsonResponse(c, fiber.StatusOK, errors.Is(result.Error, gorm.ErrRecordNotFound))
+		return helper.JsonResponse(c, fiber.StatusInternalServerError, errors.Is(result.Error, gorm.ErrRecordNotFound))
 	}
 
 	result = initializers.DB.Model(&post).Updates(models.Post{
@@ -83,7 +84,7 @@ func UpdatePost(c *fiber.Ctx) error {
 	})
 
 	if result.Error != nil {
-		return helper.JsonResponse(c, fiber.StatusOK, "failed update data")
+		return helper.JsonResponse(c, fiber.StatusInternalServerError, "failed update data")
 	}
 
 	return helper.JsonResponse(c, fiber.StatusOK, "post success fully updated")
@@ -94,7 +95,7 @@ func DeletePost(c *fiber.Ctx) error {
 	result := initializers.DB.Delete(&models.Post{}, id)
 
 	if result.Error != nil {
-		return helper.JsonResponse(c, fiber.StatusOK, errors.Is(result.Error, gorm.ErrRecordNotFound))
+		return helper.JsonResponse(c, fiber.StatusInternalServerError, errors.Is(result.Error, gorm.ErrRecordNotFound))
 	}
 
 	return helper.JsonResponse(c, fiber.StatusOK, "post success fully updated")

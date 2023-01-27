@@ -8,5 +8,4 @@ type User struct {
 	Username string `gorm:"unique" json:"username"`
 	Password string `json:"-"`
 	Names    string `json:"names"`
-	Post     []Post `gorm:"Foreignkey:UserID;association_foreignkey:ID;" json:"posts"`
 }
