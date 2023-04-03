@@ -10,7 +10,8 @@ import (
 func UserRoute(app *fiber.App) {
 	// routes
 	route := app.Group("/api")
+	var UserHandler handler.UserHandler
 
 	user := route.Group("/users")
-	user.Get("/", middleware.Protected, handler.GetAllUser)
+	user.Get("/", middleware.Protected, UserHandler.Index)
 }

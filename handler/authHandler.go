@@ -13,7 +13,10 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func SingUp(c *fiber.Ctx) error {
+type AuthHandler struct {
+}
+
+func (h *AuthHandler) SingUp(c *fiber.Ctx) error {
 
 	newUser := new(models.User)
 
@@ -45,7 +48,7 @@ func SingUp(c *fiber.Ctx) error {
 	return helper.JsonResponse(c, fiber.StatusOK, user)
 }
 
-func Login(c *fiber.Ctx) error {
+func (h *AuthHandler) Login(c *fiber.Ctx) error {
 	newUser := new(models.User)
 
 	err := c.BodyParser(newUser)
@@ -94,7 +97,7 @@ func Login(c *fiber.Ctx) error {
 	return helper.JsonResponse(c, fiber.StatusOK, user)
 }
 
-func Validate(c *fiber.Ctx) error {
+func (h *AuthHandler) Validate(c *fiber.Ctx) error {
 	user := c.Cookies("Authorization")
 
 	return helper.JsonResponse(c, fiber.StatusOK, user)

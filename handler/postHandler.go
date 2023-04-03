@@ -12,16 +12,19 @@ import (
 	"gorm.io/gorm"
 )
 
-func GetAllPost(c *fiber.Ctx) error {
+type PostHandler struct {
+}
+
+func (h *PostHandler) Index(c *fiber.Ctx) error {
 	var posts []models.Post
 	model := initializers.DB.Debug().Preload("User").Model(&posts)
 
-	result := helper.PG.With(model).Request(c.Request()).Response(&[]models.Post{})
+	result := helper.Paginate.With(model).Request(c.Request()).Response(&[]models.Post{})
 
 	return helper.JsonResponse(c, fiber.StatusOK, result)
 }
 
-func CreatePost(c *fiber.Ctx) error {
+func (h *PostHandler) Store(c *fiber.Ctx) error {
 	newPost := new(models.Post)
 
 	err := c.BodyParser(newPost)
@@ -47,7 +50,7 @@ func CreatePost(c *fiber.Ctx) error {
 	return helper.JsonResponse(c, fiber.StatusOK, "post success fully created")
 }
 
-func GetSinglePost(c *fiber.Ctx) error {
+func (h *PostHandler) Show(c *fiber.Ctx) error {
 	id := c.Params("id")
 
 	var post models.Post
@@ -61,7 +64,7 @@ func GetSinglePost(c *fiber.Ctx) error {
 	return helper.JsonResponse(c, fiber.StatusOK, post)
 }
 
-func UpdatePost(c *fiber.Ctx) error {
+func (h *PostHandler) Update(c *fiber.Ctx) error {
 	id := c.Params("id")
 
 	newPost := new(models.Post)
@@ -96,7 +99,7 @@ func UpdatePost(c *fiber.Ctx) error {
 	return helper.JsonResponse(c, fiber.StatusOK, "post success fully updated")
 }
 
-func DeletePost(c *fiber.Ctx) error {
+func (h *PostHandler) Delete(c *fiber.Ctx) error {
 	id := c.Params("id")
 	result := initializers.DB.Debug().Delete(&models.Post{}, id)
 

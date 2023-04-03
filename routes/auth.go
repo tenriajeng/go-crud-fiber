@@ -10,9 +10,10 @@ import (
 func AuthRoute(app *fiber.App) {
 	// routes
 	route := app.Group("/api")
+	var AuthHandler handler.AuthHandler
 
 	auth := route.Group("/auth")
-	auth.Post("/login", handler.Login)
-	auth.Post("/singup", handler.SingUp)
-	auth.Get("/validate", middleware.Protected, handler.Validate)
+	auth.Post("/login", AuthHandler.Login)
+	auth.Post("/singup", AuthHandler.SingUp)
+	auth.Get("/validate", middleware.Protected, AuthHandler.Validate)
 }

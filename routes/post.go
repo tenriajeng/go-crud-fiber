@@ -10,9 +10,12 @@ import (
 func PostRoute(app *fiber.App) {
 	// routes
 	route := app.Group("/api")
-	route.Get("/posts", handler.GetAllPost)
-	route.Get("/posts/:id", handler.GetSinglePost)
-	route.Post("/posts", middleware.Protected, handler.CreatePost)
-	route.Put("/posts/:id", middleware.Protected, handler.UpdatePost)
-	route.Delete("/posts/:id", middleware.Protected, handler.DeletePost)
+
+	var PostHandler handler.PostHandler
+
+	route.Get("/posts", PostHandler.Index)
+	route.Get("/posts/:id", PostHandler.Show)
+	route.Post("/posts", middleware.Protected, PostHandler.Store)
+	route.Put("/posts/:id", middleware.Protected, PostHandler.Update)
+	route.Delete("/posts/:id", middleware.Protected, PostHandler.Delete)
 }

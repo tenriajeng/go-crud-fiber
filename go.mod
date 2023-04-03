@@ -3,6 +3,7 @@ module go-fiber
 go 1.19
 
 require (
+	github.com/go-playground/validator/v10 v10.11.1
 	github.com/goccy/go-json v0.10.0
 	github.com/gofiber/fiber/v2 v2.41.0
 	github.com/iancoleman/strcase v0.2.0
@@ -17,7 +18,6 @@ require (
 require (
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
-	github.com/go-playground/validator/v10 v10.11.1 // indirect
 	github.com/gtuk/discordwebhook v1.1.0 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	golang.org/x/text v0.6.0 // indirect

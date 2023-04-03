@@ -8,12 +8,14 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func GetAllUser(c *fiber.Ctx) error {
+type UserHandler struct {
+}
+
+func (h *UserHandler) Index(c *fiber.Ctx) error {
 	var users []models.User
 	model := initializers.DB.Debug().Model(&users)
 
-	result := helper.PG.With(model).Request(c.Request()).Response(&[]models.User{})
+	result := helper.Paginate.With(model).Request(c.Request()).Response(&[]models.User{})
 
 	return helper.JsonResponse(c, fiber.StatusOK, result)
-
 }

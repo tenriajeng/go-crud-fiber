@@ -31,9 +31,8 @@ func main() {
 
 	middleware.Cache(app)
 
-	routes.PostRoute(app)
-	routes.AuthRoute(app)
-	routes.UserRoute(app)
+	var route routes.Route
+	route.Url(app)
 
 	app.Listen(":" + config.Config("PORT"))
 }
